@@ -6,7 +6,6 @@ public class Zombie extends Sprite{
     protected ZombieAnimation zombie;
     protected Point point;
     protected Tree treeTarget;
-    protected Vector2D initialPoint;
     protected boolean cutDown = false;
     protected boolean hasTree = false;
     protected boolean busy = true;
