@@ -55,7 +55,7 @@ public class Main extends Application{
                 Paths.CLOTH_WOODCUT,
                 Paths.CLOTH_WOODCUT_XML);
 
-        Vector2D location = new Vector2D(0, 0);
+        Vector2D location = new Vector2D(100, 100);
         Vector2D velocity = new Vector2D(0, 0);
         Vector2D acceleration = new Vector2D(0, 0);
 
