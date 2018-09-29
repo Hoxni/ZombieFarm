@@ -16,8 +16,10 @@ public class MouseActions implements EventHandler<MouseEvent>{
 
     @Override
     public void handle(MouseEvent event){
+        zombie.pointStarted = false;
         if(event.isSecondaryButtonDown()){
             mouseLocation.set(event.getSceneX(), event.getSceneY());
+            zombie.follow(mouseLocation);
             zombie.setChopping(false);
         }
         if(event.isPrimaryButtonDown()){
@@ -25,6 +27,7 @@ public class MouseActions implements EventHandler<MouseEvent>{
                 if(tree.contains(event.getSceneX(), event.getSceneY())){
                     zombie.setTreeTarget(tree);
                     mouseLocation.set(tree.getPosX(), tree.getPosY());
+                    zombie.follow(mouseLocation);
                     break;
                 }
             }

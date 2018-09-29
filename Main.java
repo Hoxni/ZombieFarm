@@ -6,6 +6,7 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -63,13 +64,41 @@ public class Main extends Application{
         z.setCloth(cloth);
         z.setHat(hat);
         Point p = new Point();
-        Zombie zombie = new Zombie(location, velocity, acceleration, z, p);
-        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(Settings.MOVING_SPEED), event -> zombie.update(mouseLocation)));
+        Building tower = new Building(Paths.TOWER, Paths.TOWER_XML, 200, 200);
+        Building tower1 = new Building(Paths.TOWER, Paths.TOWER_XML, 400, 400);
+        ArrayList<Building> towers = new ArrayList<>();
+        towers.add(tower);
+        towers.add(tower1);
+
+        Zombie zombie = new Zombie(location, velocity, acceleration, z, p, towers);
+
+        Point pMob = new Point();
+        ZombieAnimation zMob = new ZombieAnimation();
+        Zombie zombieMob = new Zombie(new Vector2D(500, 500), new Vector2D(0 ,0), new Vector2D(0, 0), zMob, pMob, towers);
+        canvas.getGraphicsContext2D().setStroke(Color.WHITE);
+        canvas.getGraphicsContext2D().setLineWidth(20);
+
+        Timeline timeline = new Timeline(new KeyFrame(Duration.millis(Settings.MOVING_SPEED), event -> {
+            zombie.update();
+            zombieMob.update();
+        }));
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
+
+        Random random = new Random();
+        Timeline timeline1 = new Timeline(new KeyFrame(Duration.seconds(3), event -> zombieMob.follow(new Vector2D(random.nextInt(900), random.nextInt(700)))));
+        timeline1.setCycleCount(Timeline.INDEFINITE);
+        timeline1.play();
+
         pane.getChildren().add(canvas);
         createTrees();
+
         pane.getChildren().add(zombie);
+        pane.getChildren().add(zombieMob);
+
+        pane.getChildren().add(tower);
+        pane.getChildren().add(tower1);
+
         pane.getChildren().add(p);
 
         root.setCenter(pane);
@@ -91,7 +120,7 @@ public class Main extends Application{
                     Paths.TROPIC_PALM_STUMP,
                     Paths.TROPIC_PALM_STUMP_XML);
             double xPos = 50 + (500) * positions.nextDouble();
-            double yPos = 200 + (100) * positions.nextDouble();
+            double yPos = 100 + (100) * positions.nextDouble();
             tree.relocate(xPos, yPos);
             pane.getChildren().add(tree);
             trees.add(tree);

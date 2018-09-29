@@ -83,6 +83,17 @@ public abstract class Sprite extends Pane {
 
     }
 
+    Vector2D getNormalPoint(Vector2D p, Vector2D a, Vector2D b) {
+        Vector2D ap = Vector2D.subtract(p, a);
+        Vector2D ab = Vector2D.subtract(b, a);
+
+        ab.normalize();
+        ab.multiply(ap.dot(ab));
+        Vector2D normalPoint = Vector2D.add(a, ab);
+
+        return normalPoint;
+    }
+
     /**
      * Update node position
      */

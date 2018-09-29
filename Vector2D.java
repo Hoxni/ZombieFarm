@@ -56,6 +56,14 @@ public class Vector2D {
         return new Vector2D(v1.x - v2.x, v1.y - v2.y);
     }
 
+    static public Vector2D add(Vector2D v1, Vector2D v2){
+        return new Vector2D(v1.x + v2.x, v1.y + v2.y);
+    }
+
+    public double dot(Vector2D v){
+        return x*v.x + y*v.y;
+    }
+
     public double heading2D() {
         return Math.atan2(y, x);
     }

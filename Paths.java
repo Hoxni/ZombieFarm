@@ -51,6 +51,9 @@ public class Paths{
     public static String WOODCUTTER_WAKEUP = "assets/animations/anim_woodcutter_wakeup/anim_woodcutter_wakeup.png";
     public static String WOODCUTTER_WAKEUP_XML = "assets/animations/anim_woodcutter_wakeup/anim_woodcutter_wakeup.xml";
 
+    public static String TOWER = "assets/animations/b_tower_0/b_tower_0.png";
+    public static String TOWER_XML = "assets/animations/b_tower_0/b_tower_0.xml";
+
     public static String MAIN_ISLAND = "assets/maps/main_island/img/main_island_atlas.png";
     public static String MAIN_ISLAND_XML = "assets/maps/main_island/main_island_map_config.xml";
 }
