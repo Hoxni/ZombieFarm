@@ -59,7 +59,7 @@ public interface Barrier{
         return true;
     }
 
-    //-------------------- Normal code starts here ----------------------------------------------------------
+    //-------------------- Normal code ----------------------------------------------------------
 
     double EQUITY_TOLERANCE = 0.000000001d;
 
@@ -101,39 +101,26 @@ public interface Barrier{
     }
 
     static List<Vector2D> getIntersectionPoints(Vector2D l1p1, Vector2D l1p2, List<Vector2D> poly){
-        Set<Vector2D> set = new TreeSet<>((o1, o2) -> {
+        //if line intersects polygon in corner point, function adds this point twice
+        //because two edges of polygon contain this point
+        //set is used to predict adding equal points
+        Set<Vector2D> intersectionPoints = new TreeSet<>((o1, o2) -> {
+            //check if points are equal
             if(Math.abs(o1.x - o2.x) <= EQUITY_TOLERANCE && Math.abs(o1.y - o2.y) <= EQUITY_TOLERANCE)
                 return 0;
             else return 1;
         });
+
         for(int i = 0; i < poly.size(); i++){
 
             int next = (i + 1 == poly.size()) ? 0 : i + 1;
 
             Vector2D ip = getIntersectionPoint(l1p1, l1p2, poly.get(i), poly.get(next));
 
-            if(ip != null) set.add(ip);
+            if(ip != null) intersectionPoints.add(ip);
 
         }
 
-        return new ArrayList<>(set);
-    }
-
-    //------------ Normal code above -----------
-    
-    static boolean isPointInsidePoly(Vector2D test, List<Vector2D> poly)
-    {
-        int i;
-        int j;
-        boolean result = false;
-        for (i = 0, j = poly.size() - 1; i < poly.size(); j = i++)
-        {
-            if ((poly.get(i).y > test.y) != (poly.get(j).y > test.y) &&
-                    (test.x < (poly.get(j).x - poly.get(i).x) * (test.y - poly.get(i).y) / (poly.get(j).y - poly.get(i).y) + poly.get(i).x))
-            {
-                result = true;
-            }
-        }
-        return result;
+        return new ArrayList<>(intersectionPoints);
     }
 }

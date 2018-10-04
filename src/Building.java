@@ -1,6 +1,5 @@
 import javafx.scene.canvas.Canvas;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,8 +19,6 @@ public class Building extends Pane implements Barrier{
         this.setWidth(canvas.getWidth());
         this.setHeight(canvas.getHeight());
         this.relocate(x, y);
-        canvas.getGraphicsContext2D().setStroke(Color.WHITE);
-        canvas.getGraphicsContext2D().strokeLine(0, 0, getWidth(), getHeight());
 
         rectPoints = new ArrayList<>();
         /*rectPoints.add(new Vector2D(getLayoutX(), getLayoutY() + 100));
@@ -68,66 +65,101 @@ public class Building extends Pane implements Barrier{
     }
 
     /*
-    location of bypass points
+    building is represented as a rhombus
+    it has 4 corner points and 4 edges
 
-             +-------3------+
-             |              |
-             0   building   2
-             |              |
-             +-------1----- +
+    designation:
+        |building - image of building
+        |0, 1, 2, 3 - indexes of points
+        |0e, 1e, 2e, 3e - indexes of edges
 
+             scheme
+
+              + 3 +
+      3e->  +       +  <-2e
+          +           +
+         0   building  2
+          +           +
+      0e->  +       +   <-1e
+              + 1 +
      */
-    //Need some fixes
+
+    //can be optimized rewriting "getIntersectionPoints" in "Barrier" interface
+    //for example "getIntersectionPoints" can return intersected edges
+    //or replace "getIntersectionPoints" with "isIntersected" method
     public List<Vector2D> getBypassPoints(Vector2D location, Vector2D target, List<Vector2D> intersectionPoints){
 
         //if target-point is situated inside of building
-        if(Barrier.isPointInsidePoly(target, rectPoints)){
-            intersectionPoints.addAll(Barrier.getIntersectionPoints(target, rectPoints.get(0), rectPoints));
-            target.set(rectPoints.get(0).x, rectPoints.get(0).y);
-            if(Barrier.isPointInsidePoly(location, rectPoints)){
-                return new ArrayList<>();
-            }
+        if(intersectionPoints.size() == 1){
+            Vector2D v = intersectionPoints.get(0);
+            target.set(v.x, v.y);
+            return intersectionPoints;
         }
 
-        Vector2D start = Collections.min(intersectionPoints, Comparator.comparingDouble(c -> Vector2D.subtract(location, c).magnitude()));
-        Vector2D fin = Collections.min(intersectionPoints, Comparator.comparingDouble(c -> Vector2D.subtract(target, c).magnitude()));
+        Vector2D firstIntersection = Collections.min(intersectionPoints, Comparator.comparingDouble(c -> Vector2D.subtract(location, c).magnitude()));
+        Vector2D secondIntersection = Collections.min(intersectionPoints, Comparator.comparingDouble(c -> Vector2D.subtract(target, c).magnitude()));
 
         //points of bypass
         List<Vector2D> path = new ArrayList<>();
-        path.add(start);
+        path.add(firstIntersection);
 
-        Vector2D closestToLocation = Collections.min(bypassPoints, Comparator.comparingDouble(c -> Vector2D.subtract(start, c).magnitude()));
-        Vector2D closestToTarget = Collections.min(bypassPoints, Comparator.comparingDouble(c -> Vector2D.subtract(fin, c).magnitude()));
+        //find edges which have intersection with path-line
+        //this code duplicates "getIntersectionPoints" and can be optimized as described above
+        List<Integer> intersectedEdges = new ArrayList<>();
+        for(int i = 0; i < rectPoints.size(); i++){
+            int next = (i + 1 == rectPoints.size()) ? 0 : i + 1;
 
-        //if zombie must bypasses only one corner of building (see the scheme above)
-        if(closestToLocation == closestToTarget){
-            path.add(closestToLocation);
-            path.add(intersectionPoints.get(0));
+            Vector2D ip = Barrier.getIntersectionPoint(location, target, rectPoints.get(i), rectPoints.get(next));
+
+            if(ip != null){
+                intersectionPoints.add(ip);
+                intersectedEdges.add(i);
+            }
+        }
+
+        //if line intersects two adjacent edges
+        if(Math.abs((intersectedEdges.get(0) - intersectedEdges.get(1)) % 2) == 1){
+            int min = Math.min(intersectedEdges.get(0), intersectedEdges.get(1));
+            int index = Math.abs(intersectedEdges.get(0) - intersectedEdges.get(1)) % 3 + min;
+            path.add(rectPoints.get(index));
+            path.add(secondIntersection);
             return path;
         }
 
-        //first point of bypass
-        path.add(closestToLocation);
+        //if line intersects two opposite edges
+        //find second bypass point
+        Vector2D closestToSecond = Collections.min(bypassPoints, Comparator.comparingDouble(c -> Vector2D.subtract(secondIntersection, c).magnitude()));
+        int a = intersectedEdges.get(0); //first intersected edge
+        int c = rectPoints.indexOf(closestToSecond); //index of closest corner-point for secondIntersection-point
+        int index = -1;
 
-        //next code chooses middle point of bypass
-        int bypassSide = bypassPoints.indexOf(closestToTarget);
-
-        //if zombie has come from left or right side of building (see the scheme above)
-        if(bypassSide == 0 || bypassSide == 2){
-            if(Vector2D.subtract(target, bypassPoints.get(1)).magnitude() <= Vector2D.subtract(target, bypassPoints.get(3)).magnitude()){
-                path.add(bypassPoints.get(1));
-            } else {
-                path.add(bypassPoints.get(3));
-            }
-        //if zombie has come from top or bottom sie of building (see the scheme above)
-        } else {
-            if(Vector2D.subtract(target, bypassPoints.get(0)).magnitude() <= Vector2D.subtract(target, bypassPoints.get(2)).magnitude()){
-                path.add(bypassPoints.get(0));
-            } else {
-                path.add(bypassPoints.get(2));
-            }
+        //some hard-to-explain checks to find first bypass point
+        switch(c){
+            case 0:
+                if(a == 1) index = 1;
+                else index = 3;
+                break;
+            case 1:
+                if(a == 2) index = 2;
+                else index = 0;
+                break;
+            case 2:
+                if(a == 0) index = 1;
+                else index = 3;
+                break;
+            case 3:
+                if(a == 0) index = 0;
+                else index = 2;
+                break;
         }
-        path.add(fin);
+
+        //get first bypass point
+        Vector2D p = rectPoints.get(index);
+        //yes, second bypass point is calculating earlier than first
+
+        path.add(p);
+        path.add(closestToSecond);
+        path.add(secondIntersection);
 
         return path;
     }

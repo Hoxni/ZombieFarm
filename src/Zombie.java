@@ -7,9 +7,9 @@ import java.util.Comparator;
 import java.util.List;
 
 public class Zombie extends Sprite{
-    protected Vector2D v;
+    protected Vector2D currentTargetPoint;
     protected ZombieAnimation zombie;
-    protected Point point;
+    protected WhiteWave whiteWave;
     protected Tree treeTarget;
     protected boolean pointStarted = false;
     protected boolean cutDown = false;
@@ -20,15 +20,15 @@ public class Zombie extends Sprite{
     protected ArrayList<Building> buildings;
     protected int pointIndex = 0;
 
-    public Zombie(Vector2D location, Vector2D velocity, Vector2D acceleration, ZombieAnimation zombie, Point point, ArrayList<Building> b){
+    public Zombie(Vector2D location, Vector2D velocity, Vector2D acceleration, ZombieAnimation zombie, WhiteWave point, ArrayList<Building> b){
         super(location, velocity, acceleration);
         this.zombie = zombie;
-        this.point = point;
-        this.getChildren().add(zombie);
+        this.whiteWave = point;
+        getChildren().add(zombie);
         setWidth(zombie.getWidth());
         setHeight(zombie.getHeight());
         setCenter();
-        v = new Vector2D(Settings.INITIAL_POINT.x, Settings.INITIAL_POINT.y);
+        currentTargetPoint = Settings.INITIAL_POINT.copy();
         points = new ArrayList<>();
         buildings = b;
         zombie.wakeUp();
@@ -46,15 +46,14 @@ public class Zombie extends Sprite{
             if(Vector2D.subtract(Settings.INITIAL_POINT, location).magnitude() < Settings.STOP_DISTANCE){
                 returnToStart = false;
                 hasTree = false;
-                //v.set(Settings.INITIAL_POINT.x, Settings.INITIAL_POINT.y);
             }
         }
 
-        if(Vector2D.subtract(location, v).magnitude() < Settings.STOP_DISTANCE){
+        if(Vector2D.subtract(location, currentTargetPoint).magnitude() < Settings.STOP_DISTANCE){
             stop();
         } else {
-            if(location.y > v.y){
-                if(location.x <= v.x){
+            if(location.y > currentTargetPoint.y){
+                if(location.x <= currentTargetPoint.x){
                     setScaleX(-1);
                 } else {
                     setScaleX(1);
@@ -62,7 +61,7 @@ public class Zombie extends Sprite{
                 if(hasTree) zombie.walkwoodUp();
                 else zombie.walkUp();
             } else {
-                if(location.x <= v.x){
+                if(location.x <= currentTargetPoint.x){
                     setScaleX(-1);
                 } else {
                     setScaleX(1);
@@ -72,15 +71,15 @@ public class Zombie extends Sprite{
             }
         }
 
-        super.update(v);
+        super.update(currentTargetPoint);
     }
 
     public void stop(){
         pointIndex++;
         if(pointIndex < points.size()){
-            v = points.get(pointIndex);
+            currentTargetPoint = points.get(pointIndex);
         } else {
-            point.stop();
+            whiteWave.stop();
             pointStarted = false;
         }
 
@@ -128,7 +127,7 @@ public class Zombie extends Sprite{
         points.clear();
         List<List<Vector2D>> paths = new ArrayList<>();
 
-        //adds bypass points
+        //get collections of bypass points
         for(Building building : buildings){
             List<Vector2D> intersectionPoints = Barrier.getIntersectionPoints(location, target, building.getRectPoints());
             if(!intersectionPoints.isEmpty()){
@@ -138,19 +137,20 @@ public class Zombie extends Sprite{
             }
         }
 
-        //sort points from closest to farthest for correct queue of passage
+        //sort collections of bypass point from closest to farthest
+        //collection sorts by first bypass point
         paths.sort(Comparator.comparingDouble(c -> Vector2D.subtract(location, c.get(0)).magnitude()));
 
-        //adds points
+        //add points
         for(List<Vector2D> path : paths){
             points.addAll(path);
         }
 
-        //adds target as final point
+        //add target as final point
         points.add(target);
 
-        v = points.get(pointIndex);
-        point.start(target.x, target.y);
+        currentTargetPoint = points.get(pointIndex);
+        whiteWave.start(target.x, target.y);
         pointStarted = true;
     }
 }

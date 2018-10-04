@@ -23,7 +23,7 @@ public class Main extends Application{
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        primaryStage.setTitle("Point");
+        primaryStage.setTitle("WhiteWave");
         BorderPane root = new BorderPane();
         Scene scene = new Scene(root, WIDTH, HEIGHT);
         Canvas canvas = new Canvas(WIDTH, HEIGHT);
@@ -63,7 +63,7 @@ public class Main extends Application{
         ZombieAnimation z = new ZombieAnimation();
         z.setCloth(cloth);
         z.setHat(hat);
-        Point p = new Point();
+        WhiteWave p = new WhiteWave();
         Building tower = new Building(Paths.TOWER, Paths.TOWER_XML, 200, 200);
         Building tower1 = new Building(Paths.TOWER, Paths.TOWER_XML, 400, 400);
         ArrayList<Building> towers = new ArrayList<>();
@@ -72,7 +72,7 @@ public class Main extends Application{
 
         Zombie zombie = new Zombie(location, velocity, acceleration, z, p, towers);
 
-        Point pMob = new Point();
+        WhiteWave pMob = new WhiteWave();
         //ZombieAnimation zMob = new ZombieAnimation();
         //Zombie zombieMob = new Zombie(new Vector2D(500, 500), new Vector2D(0 ,0), new Vector2D(0, 0), zMob, pMob, towers);
         canvas.getGraphicsContext2D().setStroke(Color.WHITE);
