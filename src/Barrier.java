@@ -119,6 +119,8 @@ public interface Barrier{
         return new ArrayList<>(set);
     }
 
+    //------------ Normal code above -----------
+    
     static boolean isPointInsidePoly(Vector2D test, List<Vector2D> poly)
     {
         int i;
