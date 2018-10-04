@@ -59,7 +59,7 @@ public interface Barrier{
         return true;
     }
 
-    //-------------------- Normal code ----------------------------------------------------------
+    //-------------------- Normal code starts here ----------------------------------------------------------
 
     double EQUITY_TOLERANCE = 0.000000001d;
 
