@@ -71,6 +71,8 @@ public class Zombie extends Sprite{
             }
         }
 
+
+        if(location.y >= buildings.get(0).getRectPoints().get(0).y) setTranslateZ(-3);
         super.update(currentTargetPoint);
     }
 

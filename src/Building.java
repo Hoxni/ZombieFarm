@@ -87,6 +87,7 @@ public class Building extends Pane implements Barrier{
     //can be optimized rewriting "getIntersectionPoints" in "Barrier" interface
     //for example "getIntersectionPoints" can return intersected edges
     //or replace "getIntersectionPoints" with "isIntersected" method
+    @Override
     public List<Vector2D> getBypassPoints(Vector2D location, Vector2D target, List<Vector2D> intersectionPoints){
 
         //if target-point is situated inside of building

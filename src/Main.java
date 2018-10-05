@@ -23,11 +23,11 @@ public class Main extends Application{
 
     @Override
     public void start(Stage primaryStage) throws Exception{
-        primaryStage.setTitle("WhiteWave");
+        primaryStage.setTitle("Zombie Farm");
         BorderPane root = new BorderPane();
-        Scene scene = new Scene(root, WIDTH, HEIGHT);
+        Scene scene = new Scene(root, WIDTH, HEIGHT, true);
         Canvas canvas = new Canvas(WIDTH, HEIGHT);
-        canvas.getGraphicsContext2D().fillRect(0, 0, 900, 700);
+        //canvas.getGraphicsContext2D().fillRect(0, 0, 900, 700);
         pane = new Pane();
         Hat hat = new Hat(
                 Paths.DOUBLE_HAT_STAND,
@@ -73,31 +73,34 @@ public class Main extends Application{
         Zombie zombie = new Zombie(location, velocity, acceleration, z, p, towers);
 
         WhiteWave pMob = new WhiteWave();
-        //ZombieAnimation zMob = new ZombieAnimation();
-        //Zombie zombieMob = new Zombie(new Vector2D(500, 500), new Vector2D(0 ,0), new Vector2D(0, 0), zMob, pMob, towers);
+        ZombieAnimation zMob = new ZombieAnimation();
+        Zombie zombieMob = new Zombie(new Vector2D(500, 500), new Vector2D(0 ,0), new Vector2D(0, 0), zMob, pMob, towers);
         canvas.getGraphicsContext2D().setStroke(Color.WHITE);
         canvas.getGraphicsContext2D().setLineWidth(20);
 
         Timeline timeline = new Timeline(new KeyFrame(Duration.millis(Settings.MOVING_SPEED), event -> {
             zombie.update();
-            //zombieMob.update();
+            zombieMob.update();
         }));
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
 
-       /* Random random = new Random();
+        Random random = new Random();
         Timeline timeline1 = new Timeline(new KeyFrame(Duration.seconds(3), event -> zombieMob.follow(new Vector2D(random.nextInt(900), random.nextInt(700)))));
         timeline1.setCycleCount(Timeline.INDEFINITE);
-        timeline1.play();*/
+        timeline1.play();
 
         pane.getChildren().add(canvas);
         createTrees();
 
         pane.getChildren().add(zombie);
-        //pane.getChildren().add(zombieMob);
+        pane.getChildren().add(zombieMob);
+        //zombie.setTranslateZ(-1);
 
         pane.getChildren().add(tower);
         pane.getChildren().add(tower1);
+        tower.setTranslateZ(0);
+        tower1.setTranslateZ(1);
 
         Canvas b = new Canvas(700, 700);
         b.getGraphicsContext2D().setFill(Color.WHITE);
