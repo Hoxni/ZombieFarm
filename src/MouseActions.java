@@ -16,7 +16,7 @@ public class MouseActions implements EventHandler<MouseEvent>{
 
     @Override
     public void handle(MouseEvent event){
-        zombie.pointStarted = false;
+        zombie.whiteWaveStarted = false;
         if(event.isSecondaryButtonDown()){
             mouseLocation.set(event.getSceneX(), event.getSceneY());
             zombie.follow(mouseLocation);

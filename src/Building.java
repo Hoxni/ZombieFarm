@@ -6,7 +6,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-public class Building extends Pane implements Barrier{
+public class Building extends Pane implements Obstruction{
     protected final double OFFSET = 120;
     protected ArrayList<Vector2D> rectPoints;
     protected ArrayList<Vector2D> bypassPoints;
@@ -35,27 +35,9 @@ public class Building extends Pane implements Barrier{
         rectPoints = new ArrayList<>(bypassPoints);
     }
 
-    public double getX(){
-        return rectPoints.get(0).x;
-    }
-
-    public double getY(){
-        return rectPoints.get(0).y;
-    }
-
-    public ArrayList<Vector2D> getRectPoints(){
-        return rectPoints;
-    }
-
     @Override
     public boolean contains(double x, double y){
-       /* double bot = getHeight();
-        double left = 0;
-        double right = getWidth();
-        double horizontalMiddle = 150.0;
-        double verticalMiddle = 70.0;
-        double top = horizontalMiddle - (bot - horizontalMiddle);
-        */
+
         if(getLayoutX() <= x && x <= getLayoutX() + getWidth()){
             if(getLayoutY() + 100 <= y && y <= getLayoutY() + getHeight()){
                 return true;
@@ -65,6 +47,8 @@ public class Building extends Pane implements Barrier{
     }
 
     /*
+
+
     building is represented as a rhombus
     it has 4 corner points and 4 edges
 
@@ -82,12 +66,16 @@ public class Building extends Pane implements Barrier{
           +           +
       0e->  +       +   <-1e
               + 1 +
+
+
+
      */
 
-    //can be optimized rewriting "getIntersectionPoints" in "Barrier" interface
+    //can be optimized rewriting "getIntersectionPoints" in "Obstruction" interface
     //for example "getIntersectionPoints" can return intersected edges
     //or replace "getIntersectionPoints" with "isIntersected" method
-    public List<Vector2D> getBypassPoints(Vector2D location, Vector2D target, List<Vector2D> intersectionPoints){
+    @Override
+    public List<Vector2D> getBypass(Vector2D location, Vector2D target, List<Vector2D> intersectionPoints){
 
         //if target-point is situated inside of building
         if(intersectionPoints.size() == 1){
@@ -109,7 +97,7 @@ public class Building extends Pane implements Barrier{
         for(int i = 0; i < rectPoints.size(); i++){
             int next = (i + 1 == rectPoints.size()) ? 0 : i + 1;
 
-            Vector2D ip = Barrier.getIntersectionPoint(location, target, rectPoints.get(i), rectPoints.get(next));
+            Vector2D ip = Obstruction.getIntersectionPoint(location, target, rectPoints.get(i), rectPoints.get(next));
 
             if(ip != null){
                 intersectionPoints.add(ip);
@@ -162,5 +150,20 @@ public class Building extends Pane implements Barrier{
         path.add(secondIntersection);
 
         return path;
+    }
+
+    @Override
+    public List<Vector2D> getCornerPoints(){
+        return rectPoints;
+    }
+
+    @Override
+    public Vector2D getCenter(){
+        return new Vector2D(rectPoints.get(1).x, rectPoints.get(0).y);
+    }
+
+    @Override
+    public double getLayer(){
+        return getTranslateZ();
     }
 }

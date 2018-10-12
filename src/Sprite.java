@@ -17,11 +17,11 @@ public abstract class Sprite extends Pane {
     //double angle;
 
 
-    public Sprite(Vector2D location, Vector2D velocity, Vector2D acceleration) {
+    public Sprite(Vector2D location) {
 
         this.location = location;
-        this.velocity = velocity;
-        this.acceleration = acceleration;
+        this.velocity = new Vector2D(0, 0);
+        this.acceleration = new Vector2D(0, 0);
 
     }
 
