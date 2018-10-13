@@ -6,7 +6,7 @@ public interface Obstruction{
     int OUT_RIGHT = 4;
     int OUT_BOTTOM = 8;
 
-    //Normal code below
+    //Normal code below under dashed line
 
     private static int outcode(double pX, double pY, double rectX, double rectY, double rectWidth, double rectHeight){
         int out = 0;
@@ -101,9 +101,10 @@ public interface Obstruction{
     }
 
     static List<Vector2D> getIntersectionPoints(Vector2D l1p1, Vector2D l1p2, List<Vector2D> poly){
-        //if line intersects polygon in corner point, function adds this point twice
+        //if line intersects polygon in corner point, function adds this point twice,
         //because two edges of polygon contain this point
-        //set is used to predict adding equal points
+
+        //Set is used to predict adding equal points
         Set<Vector2D> intersectionPoints = new TreeSet<>((o1, o2) -> {
             //check if points are equal
             if(Math.abs(o1.x - o2.x) <= EQUITY_TOLERANCE && Math.abs(o1.y - o2.y) <= EQUITY_TOLERANCE)

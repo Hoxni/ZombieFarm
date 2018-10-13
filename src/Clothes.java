@@ -4,8 +4,8 @@ import javafx.scene.canvas.GraphicsContext;
 abstract class Clothes extends Canvas{
     protected final int
             NUMBER_OF_MODES = 6;
-    protected Animation[] modes;
-    protected GraphicsContext graphicsContext;
+    protected final Animation[] modes;
+    protected final GraphicsContext graphicsContext;
     protected int modeIndex = 0;
 
     public Clothes(

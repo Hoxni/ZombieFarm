@@ -11,8 +11,6 @@ import javafx.scene.shape.StrokeLineJoin;
 
 public class Utils {
 
-    static double EQUITY_TOLERANCE = 0.000000001d;
-
     public static double map(double value, double currentRangeStart, double currentRangeStop, double targetRangeStart, double targetRangeStop) {
         return targetRangeStart + (targetRangeStop - targetRangeStart) * ((value - currentRangeStart) / (currentRangeStop - currentRangeStart));
     }
