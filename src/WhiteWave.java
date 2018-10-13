@@ -5,8 +5,8 @@ import javafx.scene.canvas.GraphicsContext;
 import javafx.util.Duration;
 
 public class WhiteWave extends Canvas{
-    protected Animation point;
-    protected Timeline timeline;
+    protected final Animation point;
+    protected final Timeline timeline;
     protected final double
             WIDTH = 66,
             HEIGHT = 35,

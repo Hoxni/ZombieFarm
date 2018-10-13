@@ -15,7 +15,7 @@ public class Vector2D {
     }
 
     public double magnitude() {
-        return (double) Math.sqrt(x * x + y * y);
+        return Math.sqrt(x * x + y * y);
     }
 
     public void add(Vector2D v) {

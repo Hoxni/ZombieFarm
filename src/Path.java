@@ -4,9 +4,9 @@ import javafx.scene.paint.Color;
 import java.util.ArrayList;
 
 public class Path{
-    public ArrayList<Vector2D> points;
+    public final ArrayList<Vector2D> points;
 
-    public double radius;
+    public final double radius;
 
     public Path(Canvas canvas){
         points = new ArrayList<>();

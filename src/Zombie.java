@@ -1,27 +1,28 @@
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.util.Duration;
+import javafx.util.Pair;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 public class Zombie extends Sprite{
     protected Vector2D currentTargetPoint;
-    protected ZombieAnimation zombie;
-    protected WhiteWave whiteWave;
+    protected final ZombieAnimation zombie;
+    protected final WhiteWave whiteWave;
     protected Tree treeTarget;
-    protected boolean pointStarted = false;
-    protected boolean cutDown = false;
-    protected boolean hasTree = false;
-    protected boolean returnToStart = true;
-    protected boolean wakeUp = true;
-    protected ArrayList<Vector2D> points;
-    protected ArrayList<Building> buildings;
-    protected int pointIndex = 0;
+    protected boolean whiteWaveDisplayed = false;
+    protected boolean cutDown = false; //"true" when zombie is going to cut down a tree
+    protected boolean hasTimber = false; //"true" when zombie carries a timber
+    protected boolean returnToStart = true; //"true" when zombie returns to initial point
+    protected boolean wakeUp = true; //used for wake up animation when game starts
+    protected boolean goDown = true; //"true" when zombie goes from top to bottom of frame
+    protected final List<Vector2D> points;
+    protected final List<Obstruction> obstructions;
+    protected final Deque<Pair<Double, Double>> layers; //layers of obstructions
+    protected int pointIndex = 0; //index of current target point
 
-    public Zombie(Vector2D location, Vector2D velocity, Vector2D acceleration, ZombieAnimation zombie, WhiteWave point, ArrayList<Building> b){
-        super(location, velocity, acceleration);
+    public Zombie(Vector2D location, ZombieAnimation zombie, WhiteWave point, List<? extends Obstruction> b){
+        super(location);
         this.zombie = zombie;
         this.whiteWave = point;
         getChildren().add(zombie);
@@ -30,14 +31,14 @@ public class Zombie extends Sprite{
         setCenter();
         currentTargetPoint = Settings.INITIAL_POINT.copy();
         points = new ArrayList<>();
-        buildings = b;
+        obstructions = (ArrayList<Obstruction>) b;
+        layers = new ArrayDeque<>();
         zombie.wakeUp();
         Timeline t = new Timeline(new KeyFrame(Duration.millis(Settings.WAKEUP_DELAY), event -> wakeUp = false));
         t.setCycleCount(1);
         t.play();
     }
 
-    //@Override
     public void update(){
         if(wakeUp) return;
 
@@ -45,7 +46,7 @@ public class Zombie extends Sprite{
         if(returnToStart){
             if(Vector2D.subtract(Settings.INITIAL_POINT, location).magnitude() < Settings.STOP_DISTANCE){
                 returnToStart = false;
-                hasTree = false;
+                hasTimber = false;
             }
         }
 
@@ -58,7 +59,7 @@ public class Zombie extends Sprite{
                 } else {
                     setScaleX(1);
                 }
-                if(hasTree) zombie.walkwoodUp();
+                if(hasTimber) zombie.walkwoodUp();
                 else zombie.walkUp();
             } else {
                 if(location.x <= currentTargetPoint.x){
@@ -66,8 +67,24 @@ public class Zombie extends Sprite{
                 } else {
                     setScaleX(1);
                 }
-                if(hasTree) zombie.walkwoodDown();
+                if(hasTimber) zombie.walkwoodDown();
                 else zombie.walkDown();
+            }
+        }
+
+        if(!layers.isEmpty()){
+            if(goDown){
+                if(location.y >= layers.getFirst().getValue()){
+                    setTranslateZ(layers.getFirst().getKey() - 0.5);
+                    //toFront();
+                    layers.pop();
+                }
+            } else {
+                if(location.y <= layers.getFirst().getValue()){
+                    setTranslateZ(layers.getFirst().getKey() + 0.5);
+                    //toBack();
+                    layers.pop();
+                }
             }
         }
 
@@ -80,20 +97,20 @@ public class Zombie extends Sprite{
             currentTargetPoint = points.get(pointIndex);
         } else {
             whiteWave.stop();
-            pointStarted = false;
+            whiteWaveDisplayed = false;
         }
 
-        //if zombie will fell a tree, cut-animation will play instead of stay-animation
-        if(cutDown){
-            //this.toFront(); //want some fix pos of zombie and tree
+        //if zombie will cut down a tree, cut-animation will play instead of stay-animation
+        //zombie can cut down a tree if stands on special point (cutPosition) near this tree
+        if(cutDown && Vector2D.subtract(location, treeTarget.getCutPosition()).magnitude() < Settings.STOP_DISTANCE){
             setScaleX(-1);
             treeTarget.chopDown(this);
-        } else if(!pointStarted) {//prohibits stand-animation if zombie going to target point
+        } else if(!whiteWaveDisplayed){//prohibits stand-animation if zombie is going to the target point
             zombie.stand();
         }
     }
 
-    public void setChopping(boolean mode){
+    public void setCutDownMode(boolean mode){
         cutDown = mode;
     }
 
@@ -113,33 +130,56 @@ public class Zombie extends Sprite{
         return zombie.getAnimationMode();
     }
 
+    /**
+     * zombie goes to the initial point with a timber
+     * when he cut down a tree
+     */
     public void pickTree(){
         cutDown = false;
-        hasTree = true;
+        hasTimber = true;
         returnToStart = true;
         follow(Settings.INITIAL_POINT);
     }
 
-    //create path to target point
+    /**
+     * create path to the target point
+     */
     void follow(Vector2D target){
-        if(returnToStart) target = Settings.INITIAL_POINT;
+        if(returnToStart) target = Settings.INITIAL_POINT.copy();
         pointIndex = 0;
         points.clear();
+        layers.clear();
         List<List<Vector2D>> paths = new ArrayList<>();
+        List<Pair<Double, Double>> layersList = new ArrayList<>();
+
+        if(location.y < target.y){
+            goDown = true;
+        } else {
+            goDown = false;
+        }
 
         //get collections of bypass points
-        for(Building building : buildings){
-            List<Vector2D> intersectionPoints = Barrier.getIntersectionPoints(location, target, building.getRectPoints());
-            if(!intersectionPoints.isEmpty()){
-                paths.add(building.getBypassPoints(location, target, intersectionPoints));
-                //points.add(new Vector2D(building.getLayoutX() + 100, building.getLayoutY()));
+        for(Obstruction obstruction : obstructions){
+            //if obstruction is between location and target
+            //zombie need to change the layer when passes near
+            if(Math.abs(obstruction.getCenter().y - location.y) +
+                    Math.abs(obstruction.getCenter().y - target.y) <=
+                    Math.abs(location.y - target.y)){
+                layersList.add(new Pair<>(obstruction.getLayer(), obstruction.getCenter().y));
+            }
 
+            List<Vector2D> intersectionPoints = Obstruction.getIntersectionPoints(location, target, obstruction.getCornerPoints());
+            if(!intersectionPoints.isEmpty()){
+                paths.add(obstruction.getBypass(location, target, intersectionPoints));
             }
         }
 
         //sort collections of bypass point from closest to farthest
         //collection sorts by first bypass point
         paths.sort(Comparator.comparingDouble(c -> Vector2D.subtract(location, c.get(0)).magnitude()));
+
+        layersList.sort(Comparator.comparingDouble(c -> Math.abs(location.y - c.getValue())));
+        layers.addAll(layersList);
 
         //add points
         for(List<Vector2D> path : paths){
@@ -151,6 +191,6 @@ public class Zombie extends Sprite{
 
         currentTargetPoint = points.get(pointIndex);
         whiteWave.start(target.x, target.y);
-        pointStarted = true;
+        whiteWaveDisplayed = true;
     }
 }

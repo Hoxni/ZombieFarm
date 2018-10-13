@@ -16,16 +16,16 @@ import java.util.Random;
 public class Main extends Application{
     final double HEIGHT = 700;
     final double WIDTH = 900;
-    Vector2D mouseLocation = new Vector2D(100, 100);
+    final Vector2D mouseLocation = new Vector2D(100, 100);
     ArrayList<Tree> trees;
     Pane pane;
 
 
     @Override
-    public void start(Stage primaryStage) throws Exception{
-        primaryStage.setTitle("WhiteWave");
+    public void start(Stage primaryStage){
+        primaryStage.setTitle("Zombie Farm");
         BorderPane root = new BorderPane();
-        Scene scene = new Scene(root, WIDTH, HEIGHT);
+        Scene scene = new Scene(root, WIDTH, HEIGHT, true);
         Canvas canvas = new Canvas(WIDTH, HEIGHT);
         canvas.getGraphicsContext2D().fillRect(0, 0, 900, 700);
         pane = new Pane();
@@ -57,8 +57,6 @@ public class Main extends Application{
                 Paths.CLOTH_WOODCUT_XML);
 
         Vector2D location = new Vector2D(100, 100);
-        Vector2D velocity = new Vector2D(0, 0);
-        Vector2D acceleration = new Vector2D(0, 0);
 
         ZombieAnimation z = new ZombieAnimation();
         z.setCloth(cloth);
@@ -66,46 +64,52 @@ public class Main extends Application{
         WhiteWave p = new WhiteWave();
         Building tower = new Building(Paths.TOWER, Paths.TOWER_XML, 200, 200);
         Building tower1 = new Building(Paths.TOWER, Paths.TOWER_XML, 400, 400);
-        ArrayList<Building> towers = new ArrayList<>();
-        towers.add(tower);
-        towers.add(tower1);
+        ArrayList<Obstruction> obstructions = new ArrayList<>();
+        obstructions.add(tower);
+        obstructions.add(tower1);
+        createTrees();
 
-        Zombie zombie = new Zombie(location, velocity, acceleration, z, p, towers);
+        obstructions.addAll(trees);
+
+        Zombie zombie = new Zombie(location, z, p, obstructions);
+        zombie.setTranslateZ(0);
 
         WhiteWave pMob = new WhiteWave();
-        //ZombieAnimation zMob = new ZombieAnimation();
-        //Zombie zombieMob = new Zombie(new Vector2D(500, 500), new Vector2D(0 ,0), new Vector2D(0, 0), zMob, pMob, towers);
+        ZombieAnimation zMob = new ZombieAnimation();
+        Zombie zombieMob = new Zombie(new Vector2D(0, 0), zMob, pMob, obstructions);
         canvas.getGraphicsContext2D().setStroke(Color.WHITE);
         canvas.getGraphicsContext2D().setLineWidth(20);
 
         Timeline timeline = new Timeline(new KeyFrame(Duration.millis(Settings.MOVING_SPEED), event -> {
             zombie.update();
-            //zombieMob.update();
+            zombieMob.update();
         }));
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
 
-       /* Random random = new Random();
-        Timeline timeline1 = new Timeline(new KeyFrame(Duration.seconds(3), event -> zombieMob.follow(new Vector2D(random.nextInt(900), random.nextInt(700)))));
-        timeline1.setCycleCount(Timeline.INDEFINITE);
-        timeline1.play();*/
+        Random random = new Random();
+        //Timeline timeline1 = new Timeline(new KeyFrame(Duration.seconds(3), event -> zombieMob.follow(new Vector2D(random.nextInt(900), random.nextInt(700)))));
+        //timeline1.setCycleCount(Timeline.INDEFINITE);
+        //timeline1.play();
 
         pane.getChildren().add(canvas);
-        createTrees();
 
         pane.getChildren().add(zombie);
-        //pane.getChildren().add(zombieMob);
+        pane.getChildren().add(zombieMob);
 
         pane.getChildren().add(tower);
         pane.getChildren().add(tower1);
+        tower.setTranslateZ(-1);
+        tower1.setTranslateZ(-2);
 
         Canvas b = new Canvas(700, 700);
         b.getGraphicsContext2D().setFill(Color.WHITE);
 
-        for(Vector2D v : tower.bypassPoints){
+        for(Vector2D v : trees.get(0).cornerPoints){
             b.getGraphicsContext2D().fillRect(v.x, v.y, 5, 5);
         }
-        for(Vector2D v : tower.rectPoints){
+        //canvas.getGraphicsContext2D().strokeLine(trees.get(0).getCenter().x, trees.get(0).getCenter().y, trees.get(0).getCenter().x, trees.get(0).getCutPosition().y + 100);
+        for(Vector2D v : tower.cornerPoints){
             b.getGraphicsContext2D().fillRect(v.x, v.y, 5, 5);
 
         }
@@ -124,16 +128,18 @@ public class Main extends Application{
         Random positions = new Random();
         trees = new ArrayList<>();
         for(int i = 0; i < Settings.TREE_NUMBER; i++){
+            double xPos = 50 + (500) * positions.nextDouble();
+            double yPos = 100 + (100) * positions.nextDouble();
             Tree tree = new Tree(
                     Paths.TROPIC_PALM,
                     Paths.TROPIC_PALM_XML,
                     Paths.TROPIC_PALM_SHADOW,
                     Paths.TROPIC_PALM_SHADOW_XML,
                     Paths.TROPIC_PALM_STUMP,
-                    Paths.TROPIC_PALM_STUMP_XML);
-            double xPos = 50 + (500) * positions.nextDouble();
-            double yPos = 100 + (100) * positions.nextDouble();
-            tree.relocate(xPos, yPos);
+                    Paths.TROPIC_PALM_STUMP_XML,
+                    xPos,
+                    yPos);
+            tree.setTranslateZ(-3);
             pane.getChildren().add(tree);
             trees.add(tree);
         }

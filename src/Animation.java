@@ -10,7 +10,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
 
 public class Animation{
-    protected Image[] animation;
+    protected final Image[] animation;
     protected double width = 267;
     protected double height = 200;
     public Animation(String imagePath, String xmlPath){

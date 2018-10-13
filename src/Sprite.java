@@ -2,12 +2,12 @@ import javafx.scene.layout.Pane;
 
 public abstract class Sprite extends Pane {
 
-    Vector2D location;
-    Vector2D velocity;
-    Vector2D acceleration;
+    final Vector2D location;
+    final Vector2D velocity;
+    final Vector2D acceleration;
 
-    double maxForce = Settings.SPRITE_MAX_FORCE;
-    double maxSpeed = Settings.SPRITE_MAX_SPEED;
+    final double maxForce = Settings.SPRITE_MAX_FORCE;
+    final double maxSpeed = Settings.SPRITE_MAX_SPEED;
 
     // view dimensions
 
@@ -17,11 +17,11 @@ public abstract class Sprite extends Pane {
     //double angle;
 
 
-    public Sprite(Vector2D location, Vector2D velocity, Vector2D acceleration) {
+    public Sprite(Vector2D location) {
 
         this.location = location;
-        this.velocity = velocity;
-        this.acceleration = acceleration;
+        this.velocity = new Vector2D(0, 0);
+        this.acceleration = new Vector2D(0, 0);
 
     }
 
@@ -67,8 +67,10 @@ public abstract class Sprite extends Pane {
 
         // If we are closer than 30 pixels...
         if (d < Settings.SPRITE_SLOW_DOWN_DISTANCE) {
-            double m = Utils.map(d, 0, Settings.SPRITE_SLOW_DOWN_DISTANCE, 0, maxSpeed);
-            desired.multiply(m);
+            //double m = Utils.map(d, 0, Settings.SPRITE_SLOW_DOWN_DISTANCE, 0, maxSpeed);
+            //uncomment string above and replace 0 with m than zombie will slow down near target point
+            //go to "Settings" to set mode of zombie moving
+            desired.multiply(0);
         }
         // Otherwise, proceed at maximum speed.
         else {
