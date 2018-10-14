@@ -1,13 +1,18 @@
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.collections.transformation.SortedList;
+import javafx.event.EventType;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
+import javafx.scene.control.MenuItem;
+import javafx.scene.image.ImageView;
+import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -21,6 +26,8 @@ public class Main extends Application{
     private List<Building> buildings;
     private List<Obstruction> obstructions;
     private List<Zombie> zombies;
+    private List<Cloth> cloths;
+    private List<Hat> hats;
     private Zombie zombie;
     private Pane pane;
 
@@ -28,9 +35,8 @@ public class Main extends Application{
     @Override
     public void start(Stage primaryStage){
         primaryStage.setTitle("Zombie Farm");
-        BorderPane root = new BorderPane();
+        VBox root = new VBox();
         Scene scene = new Scene(root, WIDTH, HEIGHT, true);
-
         pane = new Pane();
 
         createTrees();
@@ -38,7 +44,50 @@ public class Main extends Application{
         setObstructions();
         createMainZombie();
         createMobZombies();
+        createAnimationUpdater();
+        createMobsMover();
 
+        ((VBox)scene.getRoot()).getChildren().add(createMenu());
+
+        root.getChildren().add(pane);
+        primaryStage.setScene(scene);
+        primaryStage.show();
+        scene.addEventFilter(MouseEvent.MOUSE_PRESSED, new MouseActions(mouseLocation, trees, zombie));
+
+    }
+
+    private MenuBar createMenu(){
+        MenuBar menuBar = new MenuBar();
+        Menu menuHat = new Menu("Hat");
+        Menu menuCloth = new Menu("Cloth");
+
+        WritableImage sh = new WritableImage(hats.get(0).modes[0].getAnimationStage(0).getPixelReader(), 121, 35, 36, 28);
+        MenuItem standardHat = new MenuItem("Standard hat", new ImageView(sh));
+        standardHat.addEventHandler(EventType.ROOT, c -> zombie.getZombieAnimation().setHat(hats.get(0)));
+
+        WritableImage dh = new WritableImage(hats.get(1).modes[0].getAnimationStage(0).getPixelReader(), 121, 32, 36, 42);
+        MenuItem doubleHat = new MenuItem("Double hat", new ImageView(dh));
+        doubleHat.addEventHandler(EventType.ROOT, c -> zombie.getZombieAnimation().setHat(hats.get(1)));
+
+        menuHat.getItems().addAll(standardHat, doubleHat);
+
+        WritableImage sc = new WritableImage(cloths.get(0).modes[0].getAnimationStage(0).getPixelReader(), 132, 75, 23, 24);
+        MenuItem standardCloth = new MenuItem("Standard cloth", new ImageView(sc));
+        standardCloth.addEventHandler(EventType.ROOT, c -> zombie.getZombieAnimation().setCloth(cloths.get(0)));
+
+        WritableImage dc = new WritableImage(cloths.get(1).modes[0].getAnimationStage(0).getPixelReader(), 131, 73, 24, 26);
+        MenuItem doubleCloth = new MenuItem("Double cloth", new ImageView(dc));
+        doubleCloth.addEventHandler(EventType.ROOT, c -> zombie.getZombieAnimation().setCloth(cloths.get(1)));
+
+        menuCloth.getItems().addAll(standardCloth, doubleCloth);
+
+        menuBar.getMenus().addAll(menuHat, menuCloth);
+        menuBar.setTranslateZ(-obstructions.size() - 2);
+
+        return menuBar;
+    }
+
+    private void createAnimationUpdater(){
         Timeline timeline = new Timeline(new KeyFrame(Duration.millis(Settings.MOVING_SPEED), event -> {
             zombie.update();
             for(Zombie mob : zombies){
@@ -47,7 +96,9 @@ public class Main extends Application{
         }));
         timeline.setCycleCount(Timeline.INDEFINITE);
         timeline.play();
+    }
 
+    private void createMobsMover(){
         Random random = new Random();
         Timeline timeline1 = new Timeline(new KeyFrame(Duration.seconds(3), event -> {
             for(Zombie mob : zombies){
@@ -65,29 +116,11 @@ public class Main extends Application{
         }));
         timeline1.setCycleCount(Timeline.INDEFINITE);
         timeline1.play();
-
-        root.setCenter(pane);
-        primaryStage.setScene(scene);
-        primaryStage.show();
-        scene.addEventFilter(MouseEvent.MOUSE_PRESSED, new MouseActions(mouseLocation, trees, zombie));
-
     }
 
-    private void createMainZombie(){
-        Hat hat = new Hat(
-                Paths.DOUBLE_HAT_STAND,
-                Paths.DOUBLE_HAT_STAND_XML,
-                Paths.DOUBLE_HAT_WALK_DOWN,
-                Paths.DOUBLE_HAT_WALK_DOWN_XML,
-                Paths.DOUBLE_HAT_WALK_UP,
-                Paths.DOUBLE_HAT_WALK_UP_XML,
-                Paths.DOUBLE_HAT_WALKWOOD_DOWN,
-                Paths.DOUBLE_HAT_WALKWOOD_DOWN_XML,
-                Paths.DOUBLE_HAT_WALKWOOD_UP,
-                Paths.DOUBLE_HAT_WALKWOOD_UP_XML,
-                Paths.DOUBLE_HAT_WOODCUT,
-                Paths.DOUBLE_HAT_WOODCUT_XML);
-        Cloth cloth = new Cloth(
+    private void createClothes(){
+        cloths = new ArrayList<>();
+        cloths.add(new Cloth(
                 Paths.CLOTH_STAND,
                 Paths.CLOTH_STAND_XML,
                 Paths.CLOTH_WALK_DOWN,
@@ -99,12 +132,57 @@ public class Main extends Application{
                 Paths.CLOTH_WALKWOOD_UP,
                 Paths.CLOTH_WALKWOOD_UP_XML,
                 Paths.CLOTH_WOODCUT,
-                Paths.CLOTH_WOODCUT_XML);
+                Paths.CLOTH_WOODCUT_XML));
+        cloths.add(new Cloth(
+                Paths.DOUBLE_CLOTH_STAND,
+                Paths.DOUBLE_CLOTH_STAND_XML,
+                Paths.DOUBLE_CLOTH_WALK_DOWN,
+                Paths.DOUBLE_CLOTH_WALK_DOWN_XML,
+                Paths.DOUBLE_CLOTH_WALK_UP,
+                Paths.DOUBLE_CLOTH_WALK_UP_XML,
+                Paths.DOUBLE_CLOTH_WALKWOOD_DOWN,
+                Paths.DOUBLE_CLOTH_WALKWOOD_DOWN_XML,
+                Paths.DOUBLE_CLOTH_WALKWOOD_UP,
+                Paths.DOUBLE_CLOTH_WALKWOOD_UP_XML,
+                Paths.DOUBLE_CLOTH_WOODCUT,
+                Paths.DOUBLE_CLOTH_WOODCUT_XML));
+
+        hats = new ArrayList<>();
+        hats.add(new Hat(
+                Paths.HAT_STAND,
+                Paths.HAT_STAND_XML,
+                Paths.HAT_WALK_DOWN,
+                Paths.HAT_WALK_DOWN_XML,
+                Paths.HAT_WALK_UP,
+                Paths.HAT_WALK_UP_XML,
+                Paths.HAT_WALKWOOD_DOWN,
+                Paths.HAT_WALKWOOD_DOWN_XML,
+                Paths.HAT_WALKWOOD_UP,
+                Paths.HAT_WALKWOOD_UP_XML,
+                Paths.HAT_WOODCUT,
+                Paths.HAT_WOODCUT_XML));
+        hats.add(new Hat(
+                Paths.DOUBLE_HAT_STAND,
+                Paths.DOUBLE_HAT_STAND_XML,
+                Paths.DOUBLE_HAT_WALK_DOWN,
+                Paths.DOUBLE_HAT_WALK_DOWN_XML,
+                Paths.DOUBLE_HAT_WALK_UP,
+                Paths.DOUBLE_HAT_WALK_UP_XML,
+                Paths.DOUBLE_HAT_WALKWOOD_DOWN,
+                Paths.DOUBLE_HAT_WALKWOOD_DOWN_XML,
+                Paths.DOUBLE_HAT_WALKWOOD_UP,
+                Paths.DOUBLE_HAT_WALKWOOD_UP_XML,
+                Paths.DOUBLE_HAT_WOODCUT,
+                Paths.DOUBLE_HAT_WOODCUT_XML));
+    }
+
+    private void createMainZombie(){
+        createClothes();
 
         Vector2D location = new Vector2D(100, 100);
         ZombieAnimation z = new ZombieAnimation();
-        z.setCloth(cloth);
-        z.setHat(hat);
+        z.setCloth(cloths.get(1));
+        z.setHat(hats.get(1));
         WhiteWave p = new WhiteWave();
         p.setTranslateZ(-obstructions.size() - 1);
         pane.getChildren().add(p);
@@ -133,7 +211,6 @@ public class Main extends Application{
         double size = obstructions.size();
         for(int i = 0; i < size; i++){
             obstructions.get(i).setLayer(-i - 1);
-            System.out.println(obstructions.get(i).getCenter().y + " " + obstructions.get(i).getLayer());
         }
         Canvas canvas = new Canvas(WIDTH, HEIGHT);
         canvas.getGraphicsContext2D().fillRect(0, 0, 900, 700);
@@ -159,8 +236,8 @@ public class Main extends Application{
         Random positions = new Random();
         trees = new ArrayList<>();
         for(int i = 0; i < Settings.TREES_NUMBER; i++){
-            double xPos = 50 + (500) * positions.nextDouble();
-            double yPos = 100 + (100) * positions.nextDouble();
+            double x = 50 + (500) * positions.nextDouble();
+            double y = 100 + (100) * positions.nextDouble();
             Tree tree = new Tree(
                     Paths.TROPIC_PALM,
                     Paths.TROPIC_PALM_XML,
@@ -168,8 +245,8 @@ public class Main extends Application{
                     Paths.TROPIC_PALM_SHADOW_XML,
                     Paths.TROPIC_PALM_STUMP,
                     Paths.TROPIC_PALM_STUMP_XML,
-                    xPos,
-                    yPos);
+                    x,
+                    y);
             pane.getChildren().add(tree);
             trees.add(tree);
         }

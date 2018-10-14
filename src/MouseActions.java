@@ -7,6 +7,7 @@ public class MouseActions implements EventHandler<MouseEvent>{
     protected final Vector2D mouseLocation;
     protected final List<Tree> trees;
     protected final Zombie zombie;
+    protected final int OFFSET = 25;
 
     public MouseActions(Vector2D ml, List<Tree> t, Zombie z){
         mouseLocation = ml;
@@ -16,15 +17,15 @@ public class MouseActions implements EventHandler<MouseEvent>{
 
     @Override
     public void handle(MouseEvent event){
-        zombie.whiteWaveDisplayed = false;
+        zombie.stopWhiteWave();
         if(event.isSecondaryButtonDown()){
-            mouseLocation.set(event.getSceneX(), event.getSceneY());
+            mouseLocation.set(event.getSceneX(), event.getSceneY() - OFFSET);
             zombie.follow(mouseLocation);
             zombie.setCutDownMode(false);
         }
         if(event.isPrimaryButtonDown()){
             for(Tree tree : trees){
-                if(tree.contains(event.getSceneX(), event.getSceneY())){
+                if(tree.contains(event.getSceneX(), event.getSceneY() - OFFSET)){
                     zombie.setTreeTarget(tree);
                     mouseLocation.set(tree.getCutPosition().x, tree.getCutPosition().y);
                     zombie.follow(mouseLocation);

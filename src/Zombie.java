@@ -193,4 +193,12 @@ public class Zombie extends Sprite{
         whiteWave.start(target.x, target.y);
         whiteWaveDisplayed = true;
     }
+
+    public ZombieAnimation getZombieAnimation(){
+        return zombie;
+    }
+
+    public void stopWhiteWave(){
+        whiteWaveDisplayed = false;
+    }
 }

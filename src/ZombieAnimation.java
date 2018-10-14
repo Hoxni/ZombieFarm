@@ -96,8 +96,9 @@ public class ZombieAnimation extends Pane{
     public void setHat(Hat hat){
         this.hat = hat;
         hat.setMode(animationMode);
-        this.getChildren().set(HAT_LAYER, hat);
+        this.getChildren().set(HAT_LAYER, this.hat);
         hasHat = true;
+        System.out.println("Setted");
     }
 
     public void setCloth(Cloth cloth){

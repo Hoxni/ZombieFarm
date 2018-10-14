@@ -46,12 +46,12 @@ public class Tree extends Pane implements Obstruction{
 
     public void chopDown(Zombie zombie){
         if(!isCutDown){
-            zombie.zombie.woodFelling();
+            zombie.getZombieAnimation().woodFelling();
         }
 
         Timeline cutProcess = new Timeline(new KeyFrame(Duration.millis(Settings.WOOD_FELlING_DURATION), event -> {
             //if zombie stood near tree all necessary time, tree replaced by stump
-            if(zombie.getZombieMode() == ZombieAnimation.WOODCUT && zombie.getTreeTarget() == this){
+            if(zombie.getZombieMode() == ZombieAnimation.WOODCUT && zombie.getTreeTarget() == this && !isCutDown){
                 tree.getGraphicsContext2D().clearRect(0, 0, tree.getWidth(), tree.getHeight());
                 double x = tree.getWidth() / 2.0 - stumpView.getWidth() / 2.0;
                 double y = tree.getHeight() - stumpView.getHeight();
