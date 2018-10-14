@@ -14,7 +14,7 @@ public class Tree extends Pane implements Obstruction{
     protected final Canvas tree;
     protected final double OFFSET = 12;
     protected final Animation stumpView;
-    protected boolean isFelled = false;
+    protected boolean isCutDown = false;
     protected final List<Vector2D> cornerPoints;
 
     public Tree(
@@ -45,7 +45,9 @@ public class Tree extends Pane implements Obstruction{
     }
 
     public void chopDown(Zombie zombie){
-        zombie.zombie.woodFelling();
+        if(!isCutDown){
+            zombie.zombie.woodFelling();
+        }
 
         Timeline cutProcess = new Timeline(new KeyFrame(Duration.millis(Settings.WOOD_FELlING_DURATION), event -> {
             //if zombie stood near tree all necessary time, tree replaced by stump
@@ -55,7 +57,8 @@ public class Tree extends Pane implements Obstruction{
                 double y = tree.getHeight() - stumpView.getHeight();
                 tree.getGraphicsContext2D().drawImage(stumpView.getAnimationStage(0), x, y);
                 zombie.pickTree();
-                isFelled = true;
+                isCutDown = true;
+                return;
             }
         }));
         cutProcess.setCycleCount(1);
@@ -76,7 +79,7 @@ public class Tree extends Pane implements Obstruction{
 
     @Override
     public boolean contains(double x, double y){
-        if(isFelled) return false;
+        if(isCutDown) return false;
         double leftBound = this.getLayoutX() + tree.getWidth() / 2.0 - stumpView.getWidth() / 2.0;
         double rightBound = this.getLayoutX() + tree.getWidth() / 2.0 + stumpView.getWidth() / 2.0;
         double bottom = this.getLayoutY() + this.getHeight();
@@ -87,23 +90,18 @@ public class Tree extends Pane implements Obstruction{
         return false;
     }
 
-    //almost the same as in "Building"
+    //the same as in "Building"
     @Override
     public List<Vector2D> getBypass(Vector2D location, Vector2D target, List<Vector2D> intersectionPoints){
 
         //if target-point is situated inside of building
         if(intersectionPoints.size() == 1){
-            Vector2D v = intersectionPoints.get(0);
-            target.set(v.x, v.y);
+            if(Obstruction.isPointInPolygon(target, cornerPoints)){
+                Vector2D v = Obstruction.getIntersectionPoints(location, target, cornerPoints).get(0);
+                target.set(v.x, v.y);
+            }
             return intersectionPoints;
         }
-
-        Vector2D firstIntersection = Collections.min(intersectionPoints, Comparator.comparingDouble(c -> Vector2D.subtract(location, c).magnitude()));
-        Vector2D secondIntersection = Collections.min(intersectionPoints, Comparator.comparingDouble(c -> Vector2D.subtract(target, c).magnitude()));
-
-        //points of bypass
-        List<Vector2D> path = new ArrayList<>();
-        path.add(firstIntersection);
 
         //find edges which have intersection with path-line
         //this code duplicates "getIntersectionPoints" and can be optimized as described above
@@ -117,6 +115,14 @@ public class Tree extends Pane implements Obstruction{
                 intersectedEdges.add(new Pair<>(i, ip));
             }
         }
+
+        Vector2D firstIntersection = Collections.min(intersectionPoints, Comparator.comparingDouble(c -> Vector2D.subtract(location, c).magnitude()));
+        Vector2D secondIntersection = Collections.min(intersectionPoints, Comparator.comparingDouble(c -> Vector2D.subtract(target, c).magnitude()));
+
+        //points of bypass
+        List<Vector2D> path = new ArrayList<>();
+        path.add(firstIntersection);
+
 
         //if line intersects two adjacent edges
         if(Math.abs((intersectedEdges.get(0).getKey() - intersectedEdges.get(1).getKey()) % 2) == 1){
@@ -173,6 +179,11 @@ public class Tree extends Pane implements Obstruction{
     @Override
     public Vector2D getCenter(){
         return new Vector2D(getPosX(), getPosY());
+    }
+
+    @Override
+    public void setLayer(double layer){
+        setTranslateZ(layer);
     }
 
     @Override

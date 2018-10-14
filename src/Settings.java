@@ -17,7 +17,9 @@ public class Settings{
     public static final double WAKEUP_DURATION = 60;
     public static final double WAKEUP_DELAY = WAKEUP_DURATION * 39;
 
-    public static final int TREE_NUMBER = 1;
+    public static final int TREES_NUMBER = 3;
+    public static final int BUILDINGS_NUMBER = 3;
+    public static final int ZOMBIES_NUMBER = 3;
 
     public static final Vector2D INITIAL_POINT = new Vector2D(100, 100);
 }

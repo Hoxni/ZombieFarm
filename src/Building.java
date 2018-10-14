@@ -9,8 +9,7 @@ import java.util.List;
 
 public class Building extends Pane implements Obstruction{
     protected final double OFFSET = 5;
-    protected ArrayList<Vector2D> cornerPoints;
-    protected final ArrayList<Vector2D> bypassPoints;
+    protected final ArrayList<Vector2D> cornerPoints;
 
     public Building(String building, String buildingXML, double x, double y){
         Animation animation = new Animation(building, buildingXML);
@@ -22,16 +21,10 @@ public class Building extends Pane implements Obstruction{
         this.relocate(x, y);
 
         cornerPoints = new ArrayList<>();
-        cornerPoints.add(new Vector2D(getLayoutX(), getLayoutY() + 145));
-        cornerPoints.add(new Vector2D(getLayoutX() + 70, getLayoutY() + getHeight()));
-        cornerPoints.add(new Vector2D(getLayoutX() + getWidth(), getLayoutY() + 145));
-        cornerPoints.add(new Vector2D(getLayoutX() + 70, getLayoutY() + 100));
-
-        bypassPoints = new ArrayList<>();
-        bypassPoints.add(new Vector2D(getLayoutX() - OFFSET, getLayoutY() + 145));
-        bypassPoints.add(new Vector2D(getLayoutX() + 70, getLayoutY() + getHeight() + OFFSET));
-        bypassPoints.add(new Vector2D(getLayoutX() + getWidth() + OFFSET, getLayoutY() + 145));
-        bypassPoints.add(new Vector2D(getLayoutX() + 70, getLayoutY() + 100 - OFFSET));
+        cornerPoints.add(new Vector2D(getLayoutX() - OFFSET, getLayoutY() + 145));
+        cornerPoints.add(new Vector2D(getLayoutX() + 70, getLayoutY() + getHeight() + OFFSET));
+        cornerPoints.add(new Vector2D(getLayoutX() + getWidth() + OFFSET, getLayoutY() + 145));
+        cornerPoints.add(new Vector2D(getLayoutX() + 70, getLayoutY() + 100 - OFFSET));
     }
 
     @Override
@@ -74,15 +67,27 @@ public class Building extends Pane implements Obstruction{
     @Override
     public List<Vector2D> getBypass(Vector2D location, Vector2D target, List<Vector2D> intersectionPoints){
 
-        System.out.println(intersectionPoints.size());
         //if target-point is situated inside of building
         if(intersectionPoints.size() == 1){
-            Vector2D v = Obstruction.getIntersectionPoints(location, target, bypassPoints).get(0);
-            target.set(v.x, v.y);
+            if(Obstruction.isPointInPolygon(target, cornerPoints)){
+                Vector2D v = Obstruction.getIntersectionPoints(location, target, cornerPoints).get(0);
+                target.set(v.x, v.y);
+            }
             return intersectionPoints;
         }
 
-        intersectionPoints = Obstruction.getIntersectionPoints(location, target, bypassPoints);
+        //find edges which have intersection with path-line
+        //this code duplicates "getIntersectionPoints" and can be optimized as described above
+        List<Pair<Integer, Vector2D>> intersectedEdges = new ArrayList<>();
+        for(int i = 0; i < cornerPoints.size(); i++){
+            int next = (i + 1 == cornerPoints.size()) ? 0 : i + 1;
+
+            Vector2D ip = Obstruction.getIntersectionPoint(location, target, cornerPoints.get(i), cornerPoints.get(next));
+
+            if(ip != null){
+                intersectedEdges.add(new Pair<>(i, ip));
+            }
+        }
 
         Vector2D firstIntersection = Collections.min(intersectionPoints, Comparator.comparingDouble(c -> Vector2D.subtract(location, c).magnitude()));
         Vector2D secondIntersection = Collections.min(intersectionPoints, Comparator.comparingDouble(c -> Vector2D.subtract(target, c).magnitude()));
@@ -91,33 +96,21 @@ public class Building extends Pane implements Obstruction{
         List<Vector2D> path = new ArrayList<>();
         path.add(firstIntersection);
 
-        //find edges which have intersection with path-line
-        //this code duplicates "getIntersectionPoints" and can be optimized as described above
-        List<Pair<Integer, Vector2D>> intersectedEdges = new ArrayList<>();
-        for(int i = 0; i < bypassPoints.size(); i++){
-            int next = (i + 1 == bypassPoints.size()) ? 0 : i + 1;
-
-            Vector2D ip = Obstruction.getIntersectionPoint(location, target, bypassPoints.get(i), bypassPoints.get(next));
-
-            if(ip != null){
-                intersectedEdges.add(new Pair<>(i, ip));
-            }
-        }
 
         //if line intersects two adjacent edges
         if(Math.abs((intersectedEdges.get(0).getKey() - intersectedEdges.get(1).getKey()) % 2) == 1){
             int min = Math.min(intersectedEdges.get(0).getKey(), intersectedEdges.get(1).getKey());
             int index = Math.abs(intersectedEdges.get(0).getKey() - intersectedEdges.get(1).getKey()) % 3 + min;
-            path.add(bypassPoints.get(index));
+            path.add(cornerPoints.get(index));
             path.add(secondIntersection);
             return path;
         }
 
         //if line intersects two opposite edges
         //find second bypass point
-        Vector2D closestToSecond = Collections.min(bypassPoints, Comparator.comparingDouble(c -> Vector2D.subtract(secondIntersection, c).magnitude()));
+        Vector2D closestToSecond = Collections.min(cornerPoints, Comparator.comparingDouble(c -> Vector2D.subtract(secondIntersection, c).magnitude()));
         int a = Collections.min(intersectedEdges, Comparator.comparingDouble(c -> Vector2D.subtract(firstIntersection, c.getValue()).magnitude())).getKey(); //first intersected edge
-        int c = bypassPoints.indexOf(closestToSecond); //index of closest corner-point for secondIntersection-point
+        int c = cornerPoints.indexOf(closestToSecond); //index of closest corner-point for secondIntersection-point
         int index = -1;
 
         //some hard-to-explain checks to find first bypass point
@@ -141,7 +134,7 @@ public class Building extends Pane implements Obstruction{
         }
 
         //get first bypass point
-        Vector2D p = bypassPoints.get(index);
+        Vector2D p = cornerPoints.get(index);
         //yes, second bypass point is calculating earlier than first
 
         path.add(p);
@@ -162,7 +155,13 @@ public class Building extends Pane implements Obstruction{
     }
 
     @Override
+    public void setLayer(double layer){
+        setTranslateZ(layer);
+    }
+
+    @Override
     public double getLayer(){
         return getTranslateZ();
     }
+
 }

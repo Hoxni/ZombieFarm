@@ -1,65 +1,6 @@
 import java.util.*;
 
 public interface Obstruction{
-    int OUT_LEFT = 1;
-    int OUT_TOP = 2;
-    int OUT_RIGHT = 4;
-    int OUT_BOTTOM = 8;
-
-    //Normal code below under dashed line
-
-    private static int outcode(double pX, double pY, double rectX, double rectY, double rectWidth, double rectHeight){
-        int out = 0;
-        if(rectWidth <= 0){
-            out |= OUT_LEFT | OUT_RIGHT;
-        } else if(pX < rectX){
-            out |= OUT_LEFT;
-        } else if(pX > rectX + rectWidth){
-            out |= OUT_RIGHT;
-        }
-        if(rectHeight <= 0){
-            out |= OUT_TOP | OUT_BOTTOM;
-        } else if(pY < rectY){
-            out |= OUT_TOP;
-        } else if(pY > rectY + rectHeight){
-            out |= OUT_BOTTOM;
-        }
-        return out;
-    }
-
-    static boolean intersectsLine(Vector2D location, Vector2D target, double rectX, double rectY, double rectWidth, double rectHeight){
-        double lineX1 = location.x;
-        double lineY1 = location.y;
-        double lineX2 = target.x;
-        double lineY2 = target.y;
-        int out1, out2;
-        if((out2 = outcode(lineX2, lineY2, rectX, rectY, rectWidth, rectHeight)) == 0){
-            return true;
-        }
-        while((out1 = outcode(lineX1, lineY1, rectX, rectY, rectWidth, rectHeight)) != 0){
-            if((out1 & out2) != 0){
-                return false;
-            }
-            if((out1 & (OUT_LEFT | OUT_RIGHT)) != 0){
-                double x = rectX;
-                if((out1 & OUT_RIGHT) != 0){
-                    x += rectWidth;
-                }
-                lineY1 = lineY1 + (x - lineX1) * (lineY2 - lineY1) / (lineX2 - lineX1);
-                lineX1 = x;
-            } else {
-                double y = rectY;
-                if((out1 & OUT_BOTTOM) != 0){
-                    y += rectHeight;
-                }
-                lineX1 = lineX1 + (y - lineY1) * (lineX2 - lineX1) / (lineY2 - lineY1);
-                lineY1 = y;
-            }
-        }
-        return true;
-    }
-
-    //-------------------- Normal code starts here ---------------------------------------------------------
 
     double EQUITY_TOLERANCE = 0.000000001d;
 
@@ -125,12 +66,104 @@ public interface Obstruction{
         return new ArrayList<>(intersectionPoints);
     }
 
+    static boolean isPointInPolygon(Vector2D p, List<Vector2D> polygon )
+    {
+        double minX = polygon.get(0).x;
+        double maxX = polygon.get(0).x;
+        double minY = polygon.get(0).y;
+        double maxY = polygon.get(0).y;
+        for ( int i = 1 ; i < polygon.size() ; i++ )
+        {
+            Vector2D q = polygon.get(i);
+            minX = Math.min( q.x, minX );
+            maxX = Math.max( q.x, maxX );
+            minY = Math.min( q.y, minY );
+            maxY = Math.max( q.y, maxY );
+        }
+
+        if ( p.x < minX || p.x > maxX || p.y < minY || p.y > maxY )
+        {
+            return false;
+        }
+
+        // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
+        boolean inside = false;
+        for ( int i = 0, j = polygon.size() - 1 ; i < polygon.size() ; j = i++ )
+        {
+            if ( ( polygon.get(i).y > p.y ) != ( polygon.get(j).y > p.y ) &&
+                    p.x < ( polygon.get(j).x - polygon.get(i).x ) * ( p.y - polygon.get(i).y ) / ( polygon.get(j).y - polygon.get(i).y ) + polygon.get(i).x )
+            {
+                inside = true;
+            }
+        }
+        return inside;
+    }
+
     List<Vector2D> getBypass(Vector2D first, Vector2D second, List<Vector2D> intersection);
 
     List<Vector2D> getCornerPoints();
 
     Vector2D getCenter();
 
+    void setLayer(double layer);
     double getLayer();
+
+    //-------------------- Normal code above ---------------------------------------------------------
+
+    int OUT_LEFT = 1;
+    int OUT_TOP = 2;
+    int OUT_RIGHT = 4;
+    int OUT_BOTTOM = 8;
+
+    private static int outcode(double pX, double pY, double rectX, double rectY, double rectWidth, double rectHeight){
+        int out = 0;
+        if(rectWidth <= 0){
+            out |= OUT_LEFT | OUT_RIGHT;
+        } else if(pX < rectX){
+            out |= OUT_LEFT;
+        } else if(pX > rectX + rectWidth){
+            out |= OUT_RIGHT;
+        }
+        if(rectHeight <= 0){
+            out |= OUT_TOP | OUT_BOTTOM;
+        } else if(pY < rectY){
+            out |= OUT_TOP;
+        } else if(pY > rectY + rectHeight){
+            out |= OUT_BOTTOM;
+        }
+        return out;
+    }
+
+    static boolean intersectsLine(Vector2D location, Vector2D target, double rectX, double rectY, double rectWidth, double rectHeight){
+        double lineX1 = location.x;
+        double lineY1 = location.y;
+        double lineX2 = target.x;
+        double lineY2 = target.y;
+        int out1, out2;
+        if((out2 = outcode(lineX2, lineY2, rectX, rectY, rectWidth, rectHeight)) == 0){
+            return true;
+        }
+        while((out1 = outcode(lineX1, lineY1, rectX, rectY, rectWidth, rectHeight)) != 0){
+            if((out1 & out2) != 0){
+                return false;
+            }
+            if((out1 & (OUT_LEFT | OUT_RIGHT)) != 0){
+                double x = rectX;
+                if((out1 & OUT_RIGHT) != 0){
+                    x += rectWidth;
+                }
+                lineY1 = lineY1 + (x - lineX1) * (lineY2 - lineY1) / (lineX2 - lineX1);
+                lineX1 = x;
+            } else {
+                double y = rectY;
+                if((out1 & OUT_BOTTOM) != 0){
+                    y += rectHeight;
+                }
+                lineX1 = lineX1 + (y - lineY1) * (lineX2 - lineX1) / (lineY2 - lineY1);
+                lineY1 = y;
+            }
+        }
+        return true;
+    }
 
 }
