@@ -10,7 +10,6 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -47,7 +46,7 @@ public class Main extends Application{
         createAnimationUpdater();
         createMobsMover();
 
-        ((VBox)scene.getRoot()).getChildren().add(createMenu());
+        ((VBox) scene.getRoot()).getChildren().add(createMenu());
 
         root.getChildren().add(pane);
         primaryStage.setScene(scene);
@@ -221,8 +220,8 @@ public class Main extends Application{
     private void createBuildings(){
         buildings = new ArrayList<>();
         for(int i = 0; i < Settings.BUILDINGS_NUMBER; i++){
-            double y = 100 + i*100;
-            double x = 100 + Math.random()*500;
+            double y = 100 + i * 100;
+            double x = 100 + Math.random() * 500;
             Building building = new Building(
                     Paths.TOWER,
                     Paths.TOWER_XML,

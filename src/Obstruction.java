@@ -66,33 +66,28 @@ public interface Obstruction{
         return new ArrayList<>(intersectionPoints);
     }
 
-    static boolean isPointInPolygon(Vector2D p, List<Vector2D> polygon )
-    {
+    static boolean isPointInPolygon(Vector2D p, List<Vector2D> polygon){
         double minX = polygon.get(0).x;
         double maxX = polygon.get(0).x;
         double minY = polygon.get(0).y;
         double maxY = polygon.get(0).y;
-        for ( int i = 1 ; i < polygon.size() ; i++ )
-        {
+        for(int i = 1; i < polygon.size(); i++){
             Vector2D q = polygon.get(i);
-            minX = Math.min( q.x, minX );
-            maxX = Math.max( q.x, maxX );
-            minY = Math.min( q.y, minY );
-            maxY = Math.max( q.y, maxY );
+            minX = Math.min(q.x, minX);
+            maxX = Math.max(q.x, maxX);
+            minY = Math.min(q.y, minY);
+            maxY = Math.max(q.y, maxY);
         }
 
-        if ( p.x < minX || p.x > maxX || p.y < minY || p.y > maxY )
-        {
+        if(p.x < minX || p.x > maxX || p.y < minY || p.y > maxY){
             return false;
         }
 
         // http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html
         boolean inside = false;
-        for ( int i = 0, j = polygon.size() - 1 ; i < polygon.size() ; j = i++ )
-        {
-            if ( ( polygon.get(i).y > p.y ) != ( polygon.get(j).y > p.y ) &&
-                    p.x < ( polygon.get(j).x - polygon.get(i).x ) * ( p.y - polygon.get(i).y ) / ( polygon.get(j).y - polygon.get(i).y ) + polygon.get(i).x )
-            {
+        for(int i = 0, j = polygon.size() - 1; i < polygon.size(); j = i++){
+            if((polygon.get(i).y > p.y) != (polygon.get(j).y > p.y) &&
+                    p.x < (polygon.get(j).x - polygon.get(i).x) * (p.y - polygon.get(i).y) / (polygon.get(j).y - polygon.get(i).y) + polygon.get(i).x){
                 inside = true;
             }
         }
@@ -106,9 +101,44 @@ public interface Obstruction{
     Vector2D getCenter();
 
     void setLayer(double layer);
+
     double getLayer();
 
     //-------------------- Normal code above ---------------------------------------------------------
+
+    static List<List<Vector2D>> getGraph(Vector2D l1p1, Vector2D l1p2, List<Vector2D> poly){
+        List<List<Vector2D>> graph = new ArrayList<>(poly.size());
+        for(int i = 0; i < poly.size(); i++){
+            graph.set(i, new ArrayList<>());
+        }
+        for(int i = 0, j = poly.size(); i < poly.size(); i++){
+
+            int next = (i + 1 == poly.size()) ? 0 : i + 1;
+
+            graph.get(i).add(new Vector2D(next, 1));
+            graph.get(next).add(new Vector2D(i, 1));
+
+            Vector2D ip = getIntersectionPoint(l1p1, l1p2, poly.get(i), poly.get(next));
+
+            if(ip != null){
+                graph.add(j, new ArrayList<>());
+                int q;
+                int v;
+                if(Vector2D.subtract(ip, poly.get(i)).magnitude() <= Vector2D.subtract(ip, poly.get(next)).magnitude()){
+                    q = i;
+                    v = next;
+                } else {
+                    q = next;
+                    v = i;
+                }
+                graph.get(j).add(new Vector2D(q, 0));
+                graph.get(q).add(new Vector2D(j, 0));
+                graph.get(j).add(new Vector2D(v, 1));
+                graph.get(v).add(new Vector2D(j, 1));
+            }
+        }
+        return graph;
+    }
 
     int OUT_LEFT = 1;
     int OUT_TOP = 2;
